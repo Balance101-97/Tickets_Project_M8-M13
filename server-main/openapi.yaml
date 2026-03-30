@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: Ticket Management API
+  description: REST API for managing tickets and webhook subscriptions.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Verifies if the API is running.
+      responses:
+        '200':
+          description: API status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+
+  /tickets:
+    get:
+      summary: Get tickets
+      description: >
+        Returns a paginated list of tickets.
+        Results can be filtered using query parameters.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of tickets to return
+          schema:
+            type: integer
+            default: 50
+
+        - name: offset
+          in: query
+          description: Number of tickets to skip
+          schema:
+            type: integer
+            default: 0
+
+        - name: CI_Name
+          in: query
+          description: Filter by Configuration Item name
+          schema:
+            type: string
+
+        - name: CI_Cat
+          in: query
+          description: Filter by Configuration Item category
+          schema:
+            type: string
+
+        - name: Status
+          in: query
+          description: Filter by ticket status
+          schema:
+            type: string
+
+        - name: Priority
+          in: query
+          description: Filter by ticket priority
+          schema:
+            type: string
+
+        - name: Open_Time
+          in: query
+          description: Filter by open time (greater or equal)
+          schema:
+            type: string
+
+        - name: Close_Time
+          in: query
+          description: Filter by close time (less or equal)
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Paginated list of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ticket'
+
+    post:
+      summary: Create a new ticket
+      description: Creates a new ticket with default status and timestamps.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketInput'
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+
+  /tickets/{id}:
+    get:
+      summary: Get ticket by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ticket found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          description: Ticket not found
+
+    delete:
+      summary: Delete ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Ticket deleted
+
+  /stats:
+    get:
+      summary: Get ticket statistics
+      description: Returns aggregated ticket statistics.
+      responses:
+        '200':
+          description: Statistics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+
+  /webhooks:
+    get:
+      summary: List webhook subscriptions
+      responses:
+        '200':
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Webhook'
+
+    post:
+      summary: Register a webhook
+      description: Registers a new webhook subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookInput'
+      responses:
+        '201':
+          description: Webhook registered
+
+  /webhooks/{id}:
+    delete:
+      summary: Delete webhook subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Webhook deleted
+
+components:
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+        CI_Name:
+          type: string
+          example: Server-01
+        CI_Cat:
+          type: string
+          example: Infrastructure
+        Status:
+          type: string
+          example: Work In Progress
+        Priority:
+          type: string
+          example: "1"
+        Open_Time:
+          type: string
+          nullable: true
+          example: "2024-01-01 10:00:00"
+        Close_Time:
+          type: string
+          nullable: true
+          example: "2024-01-02 15:30:00"
+        created_at:
+          type: string
+          example: "2024-01-01 09:55:00"
+        updated_at:
+          type: string
+          example: "2024-01-01 10:10:00"
+
+    TicketInput:
+      type: object
+      properties:
+        CI_Name:
+          type: string
+        CI_Cat:
+          type: string
+        Status:
+          type: string
+        Priority:
+          type: string
+        Open_Time:
+          type: string
+        Close_Time:
+          type: string
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+          format: uri
+        events:
+          type: string
+          example: ticket.created
+        created_at:
+          type: string
+
+    WebhookInput:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: string
+
+    Stats:
+      type: object
+      properties:
+        totalTickets:
+          type: integer
+        byStatus:
+          type: object
+          additionalProperties:
+            type: integer

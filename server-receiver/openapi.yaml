@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  receiver4000:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./server-receiver:/app
+    environment:
+      PORT: "4000"
+      WEBHOOK_SECRET: "key"
+    command: sh -lc "npm install && npm start"
+    ports:
+      - "4000:4000"
