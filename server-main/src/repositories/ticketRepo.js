@@ -14,7 +14,7 @@ const TICKET_COLUMNS = [
   "updated_at",
 ];
 
-function toTicketRow(row) {
+export function toTicketRow(row) {
   if (!row) return null;
   return row;
 }

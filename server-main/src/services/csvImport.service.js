@@ -2,7 +2,7 @@ import fs from "fs";
 import { parse } from "csv-parse/sync";
 import { dbRun } from "../db/index.js";
 
-function pick(row, ...keys) {
+export function pick(row, ...keys) {
   for (const k of keys) {
     if (row[k] !== undefined && row[k] !== null) return row[k];
   }

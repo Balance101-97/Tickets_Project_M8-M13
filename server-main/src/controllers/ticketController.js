@@ -8,13 +8,13 @@ export function parseIntParam(value, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function badRequest(message) {
+export function badRequest(message) {
   const err = new Error(message);
   err.statusCode = 400;
   return err;
 }
 
-function notFound(message) {
+export function notFound(message) {
   const err = new Error(message);
   err.statusCode = 404;
   return err;

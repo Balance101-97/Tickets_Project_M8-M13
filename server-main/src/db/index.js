@@ -20,7 +20,7 @@ export function connectDb(dbFile) {
   });
 }
 
-function getDb() {
+export function getDb() {
   if (!db) throw new Error("DB not initialized. Call connectDb() first.");
   return db;
 }

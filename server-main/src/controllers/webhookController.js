@@ -2,19 +2,19 @@
 import * as webhookRepo from "../repositories/webhookRepo.js";
 import { dispatchWebhookEvent } from "../services/webhookDispatcher.service.js";
 
-function badRequest(message) {
+export function badRequest(message) {
   const err = new Error(message);
   err.statusCode = 400;
   return err;
 }
 
-function notFound(message) {
+export function notFound(message) {
   const err = new Error(message);
   err.statusCode = 404;
   return err;
 }
 
-function isHttpUrl(value) {
+export function isHttpUrl(value) {
   try {
     const u = new URL(value);
     return u.protocol === "http:" || u.protocol === "https:";

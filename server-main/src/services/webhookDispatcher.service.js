@@ -1,7 +1,7 @@
 // server-main/src/services/webhookDispatcher.service.js
 import { listSubscriptions } from "../repositories/webhookRepo.js";
 
-async function postJson(url, body, secret) {
+export async function postJson(url, body, secret) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
