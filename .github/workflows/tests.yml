@@ -1,4 +1,4 @@
-name: Testes Unitários
+name: Testes Unitários e Integração
 
 on:
   push:
@@ -24,8 +24,11 @@ jobs:
         run: npm install
         working-directory: server-main
 
-      - name: Correr testes com cobertura
-        run: npm test -- --coverage
+      - name: Correr testes
+        run: npm test
         working-directory: server-main
 
-      - uses: codecov/codecov-action@v4
+      - name: Enviar coverage para Codecov   # ← este step novo
+        uses: codecov/codecov-action@v4
+        with:
+          directory: server-main/coverage
