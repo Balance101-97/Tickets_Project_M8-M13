@@ -169,10 +169,7 @@
           "name": "GET /tickets – filtrar por status",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/tickets?status=Work In Progress",
-              "query": [{ "key": "status", "value": "Work In Progress" }]
-            }
+            "url": "{{baseUrl}}/tickets?status=Work In Progress"
           },
           "event": [
             {
@@ -198,10 +195,7 @@
           "name": "GET /tickets – paginação com limit=1",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/tickets?limit=1",
-              "query": [{ "key": "limit", "value": "1" }]
-            }
+            "url": "{{baseUrl}}/tickets?limit=1"
           },
           "event": [
             {
@@ -538,7 +532,7 @@
           "name": "GET /stats – estatísticas globais",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/stats"
+            "url": "{{baseUrl}}/stats/tickets"
           },
           "event": [
             {
