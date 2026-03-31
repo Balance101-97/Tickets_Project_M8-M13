@@ -73,7 +73,7 @@ jobs:
         run: npm install -g wait-on
 
       - name: Iniciar servidor em background
-        run: node src/server.js &
+        run: node src/server.js > /tmp/server.log 2>&1 &
         working-directory: server-main
         env:
           PORT: 3001
@@ -82,6 +82,10 @@ jobs:
 
       - name: Aguardar servidor estar pronto
         run: wait-on http://localhost:3001/health --timeout 15000
+
+      - name: Mostrar log do servidor (sempre, mesmo se falhar)
+        if: always()    # ← corre mesmo que o step anterior falhe
+        run: cat /tmp/server.log
 
       - name: Correr testes de aceitação (Newman)
         run: |
