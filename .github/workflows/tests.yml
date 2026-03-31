@@ -28,7 +28,8 @@ jobs:
         run: npm test
         working-directory: server-main
 
-      - name: Enviar coverage para Codecov   # ← este step novo
-        uses: codecov/codecov-action@v4
+      - name: Enviar coverage para Codecov   
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           directory: server-main/coverage
