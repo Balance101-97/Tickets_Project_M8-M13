@@ -78,7 +78,7 @@ jobs:
         env:
           PORT: 3001
           DB_FILE: ./data/test_acceptance.db   # BD separada para aceitação
-          CSV_PATH: ../tests/seed.csv
+          CSV_PATH: ${{ github.workspace }}/tests/seed.csv
 
       - name: Aguardar servidor estar pronto
         run: wait-on http://localhost:3001/health --timeout 15000
