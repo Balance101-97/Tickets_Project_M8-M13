@@ -9,18 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - uses: actions/cache@v4
+        with:
+          path: server-main/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('server-main/package-lock.json') }}
 
       - name: Instalar dependências
         run: npm install
         working-directory: server-main
 
-      - name: Correr testes
-        run: npm test
+      - name: Correr testes com cobertura
+        run: npm test -- --coverage
         working-directory: server-main
+
+      - uses: codecov/codecov-action@v4
