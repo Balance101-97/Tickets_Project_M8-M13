@@ -1,0 +1,600 @@
+{
+  "info": {
+    "name": "Tickets API – Testes de Aceitação",
+    "_postman_id": "tickets-acceptance-tests",
+    "description": "Coleção de testes de aceitação para a Tickets API.\nCorre contra um servidor real em http://localhost:3001.\nUsa variáveis de ambiente para guardar IDs entre pedidos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "ticketId", "value": "" },
+    { "key": "webhookId", "value": "" }
+  ],
+
+  "item": [
+
+    {
+      "name": "🟢 Health Check",
+      "item": [
+        {
+          "name": "GET /health – servidor está vivo",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status é ok', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('ok');",
+                  "});",
+                  "pm.test('bd está ligada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.db).to.be.true;",
+                  "});",
+                  "pm.test('tem timestamp', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.time).to.be.a('string');",
+                  "});",
+                  "pm.test('responde em menos de 500ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🎫 Tickets – CRUD completo",
+      "item": [
+
+        {
+          "name": "POST /tickets – criar ticket válido",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/tickets",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"CI_Name\": \"Servidor Web\",\n  \"CI_Cat\": \"Hardware\",\n  \"Status\": \"Work In Progress\",\n  \"Priority\": \"1\",\n  \"Open_Time\": \"2024-06-01\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 201 Created', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('devolve o ticket criado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data).to.be.an('object');",
+                  "    pm.expect(body.data.CI_Name).to.eql('Servidor Web');",
+                  "    pm.expect(body.data.CI_Cat).to.eql('Hardware');",
+                  "});",
+                  "pm.test('tem id atribuído automaticamente', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.id).to.be.a('number');",
+                  "    // guarda o id para usar nos próximos pedidos",
+                  "    pm.collectionVariables.set('ticketId', body.data.id);",
+                  "});",
+                  "pm.test('tem created_at preenchido', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.created_at).to.be.a('string');",
+                  "});",
+                  "pm.test('responde em menos de 500ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "POST /tickets – erro sem Open_Time",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/tickets",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"CI_Name\": \"Sem Data\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('mensagem de erro menciona Open_Time', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.message).to.match(/Open_Time/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets – listar todos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tickets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve array de tickets', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "pm.test('tem paginação na resposta', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.paging).to.have.property('total');",
+                  "    pm.expect(body.paging).to.have.property('limit');",
+                  "    pm.expect(body.paging).to.have.property('offset');",
+                  "});",
+                  "pm.test('total é pelo menos 1 (criámos um antes)', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.paging.total).to.be.at.least(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets – filtrar por status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tickets?status=Work In Progress",
+              "query": [{ "key": "status", "value": "Work In Progress" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('todos os tickets têm o status pedido', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(ticket => {",
+                  "        pm.expect(ticket.Status).to.eql('Work In Progress');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets – paginação com limit=1",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tickets?limit=1",
+              "query": [{ "key": "limit", "value": "1" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve no máximo 1 ticket', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.length).to.be.at.most(1);",
+                  "});",
+                  "pm.test('paging.limit é 1', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.paging.limit).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets/:id – obter ticket criado",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tickets/{{ticketId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve o ticket correto', () => {",
+                  "    const body = pm.response.json();",
+                  "    const id = pm.collectionVariables.get('ticketId');",
+                  "    pm.expect(body.data.id).to.eql(id);",
+                  "    pm.expect(body.data.CI_Name).to.eql('Servidor Web');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets/:id – 404 para id inexistente",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tickets/99999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 404', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('tem mensagem de erro', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.message).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "PATCH /tickets/:id – atualizar status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/tickets/{{ticketId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Status\": \"Closed\",\n  \"Close_Time\": \"2024-06-10\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve before e after', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data).to.have.property('before');",
+                  "    pm.expect(body.data).to.have.property('after');",
+                  "});",
+                  "pm.test('after tem o novo status', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.after.Status).to.eql('Closed');",
+                  "});",
+                  "pm.test('before tinha o status anterior', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.before.Status).to.eql('Work In Progress');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DELETE /tickets/:id – apagar ticket",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/tickets/{{ticketId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve o ticket apagado', () => {",
+                  "    const body = pm.response.json();",
+                  "    const id = pm.collectionVariables.get('ticketId');",
+                  "    pm.expect(body.data.id).to.eql(id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "GET /tickets/:id – 404 após apagar",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tickets/{{ticketId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ticket já não existe após apagar', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "🔔 Webhooks – Subscriptions",
+      "item": [
+
+        {
+          "name": "GET /webhooks/subscriptions – lista vazia inicial",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/webhooks/subscriptions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve array', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "POST /webhooks/subscriptions – criar subscription",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/webhooks/subscriptions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"http://servidor-receiver.com/webhook\",\n  \"events\": [\"ticket.created\", \"ticket.updated\", \"ticket.deleted\"]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 201 Created', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('devolve a subscription criada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.url).to.eql('http://servidor-receiver.com/webhook');",
+                  "    pm.expect(body.data.events).to.be.an('array');",
+                  "    pm.expect(body.data.events).to.include('ticket.created');",
+                  "});",
+                  "pm.test('tem id atribuído', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.id).to.be.a('number');",
+                  "    pm.collectionVariables.set('webhookId', body.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "POST /webhooks/subscriptions – erro com URL inválida",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/webhooks/subscriptions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"nao-e-uma-url\",\n  \"events\": [\"ticket.created\"]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('mensagem de erro menciona url', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.message).to.match(/url/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "POST /webhooks/subscriptions – erro com events vazio",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/webhooks/subscriptions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"http://servidor.com/hook\",\n  \"events\": []\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('mensagem de erro menciona events', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.message).to.match(/events/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DELETE /webhooks/subscriptions/:id – apagar subscription",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/webhooks/subscriptions/{{webhookId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('devolve a subscription apagada', () => {",
+                  "    const body = pm.response.json();",
+                  "    const id = pm.collectionVariables.get('webhookId');",
+                  "    pm.expect(body.data.id).to.eql(id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DELETE /webhooks/subscriptions/:id – 404 após apagar",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/webhooks/subscriptions/{{webhookId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('subscription já não existe após apagar', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "📊 Stats",
+      "item": [
+        {
+          "name": "GET /stats – estatísticas globais",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/stats"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('tem totals com total, open e closed', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.totals).to.have.property('total');",
+                  "    pm.expect(body.data.totals).to.have.property('open');",
+                  "    pm.expect(body.data.totals).to.have.property('closed');",
+                  "});",
+                  "pm.test('tem by_status e by_priority', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.by_status).to.be.an('array');",
+                  "    pm.expect(body.data.by_priority).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "❌ Rotas desconhecidas",
+      "item": [
+        {
+          "name": "GET /rota-invalida – 404",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/rota-que-nao-existe"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('responde 404 para rota desconhecida', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('tem mensagem de erro', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.message).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+  ]
+}
