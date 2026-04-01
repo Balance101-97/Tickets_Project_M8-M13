@@ -11,7 +11,7 @@ export function notFoundMiddleware(req, res) {
   });
 }
 
-export function errorMiddleware(err, req, res, next) {
+export function errorMiddleware(err, req, res, next) { // eslint-disable-line no-unused-vars
   const status = err.statusCode || err.status || 500;
 
   if (status >= 500) {

@@ -1,6 +1,6 @@
 // server-main/src/controllers/webhookController.js
 import * as webhookRepo from "../repositories/webhookRepo.js";
-import { dispatchWebhookEvent } from "../services/webhookDispatcher.service.js";
+
 
 export function badRequest(message) {
   const err = new Error(message);
