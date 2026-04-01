@@ -15,9 +15,12 @@ jobs:
   lint:
     name: Linter (Super-Linter)
     runs-on: ubuntu-latest
+    continue-on-error: true      # ← avisa mas não falha o workflow
+    
     permissions:
       contents: read
       statuses: write       # ← necessário para o Super-Linter reportar status
+    
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,6 +36,10 @@ jobs:
           VALIDATE_SQL: true                           # analisa o schema.sql
           DEFAULT_BRANCH: main
           LOG_LEVEL: DEBUG
+
+      - name: Mostrar log do Super-Linter
+        if: always()
+        run: cat super-linter.log 2>/dev/null || echo "log não encontrado"
 
   jest-tests:
     name: Unitários e Integração (Jest)

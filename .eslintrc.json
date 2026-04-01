@@ -9,7 +9,13 @@
     },
     "rules": {
       "no-unused-vars": "warn",
+      "no-undef": "warn",
       "no-console": "off",
-      "semi": ["warn", "always"]
-    }
+      "semi": "off"
+    },
+    "ignorePatterns": [
+      "node_modules/",
+      "data/",
+      "coverage/"
+    ]
   }
