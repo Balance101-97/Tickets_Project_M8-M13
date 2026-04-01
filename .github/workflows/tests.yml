@@ -15,7 +15,9 @@ jobs:
   lint:
     name: Linter (Super-Linter)
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      statuses: write       # ← necessário para o Super-Linter reportar status
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +32,8 @@ jobs:
           VALIDATE_JSON: true                          # analisa o postman_collection.json
           VALIDATE_SQL: true                           # analisa o schema.sql
           DEFAULT_BRANCH: main
-          
+          LOG_LEVEL: DEBUG
+
   jest-tests:
     name: Unitários e Integração (Jest)
     runs-on: ubuntu-latest
