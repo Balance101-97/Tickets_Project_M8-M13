@@ -41,6 +41,55 @@ jobs:
         if: always()
         run: cat super-linter.log 2>/dev/null || echo "log não encontrado"
 
+  security:
+    name: Segurança (npm audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências (server-main)
+        run: npm install
+        working-directory: server-main
+
+      - name: Verificar vulnerabilidades (server-main)
+        run: npm audit --audit-level=high
+        working-directory: server-main
+
+      - name: Instalar dependências (server-receiver)
+        run: npm install
+        working-directory: server-receiver
+
+      - name: Verificar vulnerabilidades (server-receiver)
+        run: npm audit --audit-level=high
+        working-directory: server-receiver
+
+  sast:
+    name: SAST (CodeQL)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write    # necessário para publicar resultados
+      actions: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript   # analisa JS automaticamente
+          queries: security-and-quality
+
+      - name: Executar análise CodeQL
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+          
   jest-tests:
     name: Unitários e Integração (Jest)
     runs-on: ubuntu-latest
