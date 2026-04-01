@@ -12,6 +12,25 @@ jobs:
   # JOB 1 — Testes unitários + integração (Jest)
   # Não precisa de servidor real — usa BD em memória
   # ─────────────────────────────────────────────────────────────
+  lint:
+    name: Linter (Super-Linter)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # necessário para o Super-Linter ver o histórico
+
+      - name: Correr Super-Linter
+        uses: super-linter/super-linter@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # já existe, não precisas criar
+          VALIDATE_JAVASCRIPT_ES: true                 # analisa os ficheiros .js
+          VALIDATE_YAML: true                          # analisa o workflow .yml
+          VALIDATE_JSON: true                          # analisa o postman_collection.json
+          VALIDATE_SQL: true                           # analisa o schema.sql
+          DEFAULT_BRANCH: main
+          
   jest-tests:
     name: Unitários e Integração (Jest)
     runs-on: ubuntu-latest
